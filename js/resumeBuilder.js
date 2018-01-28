@@ -1,12 +1,4 @@
-/*
-This is empty on purpose! Your code to build the resume will go here.
- */
-/*
-var formattedName = HTMLheaderName.replace("%data%","Lin Yongjian");
-var formattedRole = HTMLheaderRole.replace("%data%","Web Developer");
-$("#header").prepend(formattedRole);
-$("#header").prepend(formattedName);
-*/
+
 var bio = {
     "name": "Lin Yongjian",
     "role": "Web Developer",
@@ -27,7 +19,8 @@ var work = {
             "employer": "爱米未",
             "title": "游戏运营助理",
             "dates": "2017年6月至今",
-            "description": "后台游戏数据审核，活动策划"
+            "description": "后台游戏数据审核，活动策划",
+            "location": "广东深圳"
         }
     ]
 }
@@ -38,7 +31,7 @@ var education = {
             "name": "深圳信息职业技术学院",
             "location": "深圳",
             "degree": "大专",
-            "majors": "工程管理",
+            "majors": ["工程管理","计量计价"],
             "dates": "2013-2016年",
             "url": "http://www.sziit.com.cn/"
         }
@@ -64,19 +57,6 @@ var projects = {
     ]
 };
 
-/*
-if(bio.skills.length > 0) {
-
-    $("#header").append(HTMLskillsStart);
-    var formattedSkill = HTMLskills.replace("%data%", bio.skills[0]);
-
-    $("#skills").append(formattedSkill);
-    formattedSkill = HTMLskills.replace("%data%", bio.skills[1]);
-    $("#skills").append(formattedSkill);
-    formattedSkill = HTMLskills.replace("%data%", bio.skills[2]);
-    $("#skills").append(formattedSkill);
-};
-*/
 
 bio.display = function() {
     var formattedName = HTMLheaderName.replace("%data%",bio.name);
@@ -93,6 +73,7 @@ bio.display = function() {
     var formattedgithub = HTMLgithub.replace("%data%",bio.contacts.github);
     var formattedlocation = HTMLlocation.replace("%data%",bio.contacts.location);
     $("#topContacts").append(formattedmobile,formattedemail,formattedgithub,formattedlocation);
+    $("#footerContacts").append(formattedmobile,formattedemail,formattedgithub,formattedlocation);
 
     if (bio.skills.length > 0) {
         $("#header").append(HTMLskillsStart);
@@ -128,7 +109,8 @@ education.display = function() {
         var formattedDegree = HTMLschoolDegree.replace("%data%",school.dates);
         var formattedMajor = HTMLschoolMajor.replace("%data%",school.majors);
         var formattedDates = HTMLschoolDates.replace("%data%",school.dates);
-        $(".education-entry:last").append(formattedName,formattedDegree,formattedMajor,formattedLocation,formattedDates);
+        var formattedUrl = HTMLonlineURL.replace("%data%",school.url);
+        $(".education-entry:last").append(formattedName,formattedDegree,formattedMajor,formattedLocation,formattedDates,formattedUrl);
     });
 
     $(".education-entry:last").append(HTMLonlineClasses);

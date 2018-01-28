@@ -1,16 +1,15 @@
 /*
 
-This file contains all of the code running in the background that makes resumeBuilder.js possible. We call these helper functions because they support your code in this course.
+此文件包含所有能使得 resumeBuilder.js 能够运行的代码。 我们称之为帮助函数，因为它们支持您在本课程中的代码。
 
-Don't worry, you'll learn what's going on in this file throughout the course. You won't need to make any changes to it until you start experimenting with inserting a Google Map in Problem Set 3.
+不要担心，您将在整个课程中了解此文件中发生的情况。
 
 Cameron Pittman
 */
 
-
 /*
-These are HTML strings. As part of the course, you'll be using JavaScript functions
-replace the %data% placeholder text you see in them.
+这些是 HTML 字符串。 作为课程的一部分，
+您将使用JavaScript函数替换您在其中看到的 ％data％ 占位符文本。
 */
 var HTMLheaderName = '<h1 id="name">%data%</h1>';
 var HTMLheaderRole = '<span>%data%</span><hr>';
@@ -26,7 +25,7 @@ var HTMLlocation = '<li class="flex-item"><span class="orange-text">location</sp
 var HTMLbioPic = '<img src="%data%" class="biopic">';
 var HTMLwelcomeMsg = '<span class="welcome-message">%data%</span>';
 
-var HTMLskillsStart = '<h3 id="skills-h3">Skills at a Glance:</h3><ul id="skills" class="flex-column"></ul>';
+var HTMLskillsStart = '<h3 id="skills-h3">拥有的技能:</h3><ul id="skills" class="flex-column"></ul>';
 var HTMLskills = '<li class="flex-item"><span class="white-text">%data%</span></li>';
 
 var HTMLworkStart = '<div class="work-entry"></div>';
@@ -56,7 +55,7 @@ var HTMLonlineDates = '<div class="date-text">%data%</div>';
 var HTMLonlineURL = '<br><a href="#">%data%</a>';
 
 var internationalizeButton = '<button>Internationalize</button>';
-var googleMap = '<div id="map"></div>';
+var gaodeMap = '<div id="map"></div>';
 
 
 /*
@@ -65,7 +64,7 @@ The Internationalize Names challenge found in the lesson Flow Control from JavaS
 $(document).ready(function() {
   $('button').click(function() {
     var $name = $('#name');
-    var iName = inName($name.text()) || function(){};
+    var iName = inName($name.text()) || function() {};
     $name.html(iName);
   });
 });
@@ -75,13 +74,11 @@ The next few lines about clicks are for the Collecting Click Locations quiz in t
 */
 var clickLocations = [];
 
-function logClicks(x,y) {
-  clickLocations.push(
-    {
-      x: x,
-      y: y
-    }
-  );
+function logClicks(x, y) {
+  clickLocations.push({
+    x: x,
+    y: y
+  });
   console.log('x location: ' + x + '; y location: ' + y);
 }
 
@@ -92,158 +89,105 @@ $(document).click(function(loc) {
 
 
 /*
-This is the fun part. Here's where we generate the custom Google Map for the website.
-See the documentation below for more details.
-https://developers.google.com/maps/documentation/javascript/reference
+这是有趣的部分。 这里是我们为网站生成自定义高德地图的地方。
+有关详细信息，请参阅以下文档。
+http://lbs.amap.com/
 */
-var map;    // declares a global map variable
-
+var map; // 声明一个全局变量，存储地图对象
 
 /*
-Start here! initializeMap() is called when page is loaded.
+从这里开始！ 在加载页面时会调用initializeMap（）
 */
 function initializeMap() {
+  // 创建地图对象
+  map = new AMap.Map('map', {
+    resizeEnable: true,
+    center: [105.30, 36.030],
+    zoom: 4
+  });
 
-  var locations;
+  map.plugin(["AMap.ToolBar"], function() {
+    // 添加 工具条
+    map.addControl(new AMap.ToolBar());
+  });
 
-  var mapOptions = {
-    disableDefaultUI: true
-  };
+  var locations = locationFinder();
+  locations.forEach(function(place) {
+    searchLocation(place);
+  });
 
-  /*
-  For the map to be displayed, the googleMap var must be
-  appended to #mapDiv in resumeBuilder.js.
-  */
-  map = new google.maps.Map(document.querySelector('#map'), mapOptions);
-
-
-  /*
-  locationFinder() returns an array of every location string from the JSONs
-  written for bio, education, and work.
-  */
-  function locationFinder() {
-
-    // initializes an empty array
-    var locations = [];
-
-    // adds the single location property from bio to the locations array
-    locations.push(bio.contacts.location);
-
-    // iterates through school locations and appends each location to
-    // the locations array. Note that forEach is used for array iteration
-    // as described in the Udacity FEND Style Guide:
-    // https://udacity.github.io/frontend-nanodegree-styleguide/javascript.html#for-in-loop
-    education.schools.forEach(function(school){
-      locations.push(school.location);
-    });
-
-    // iterates through work locations and appends each location to
-    // the locations array. Note that forEach is used for array iteration
-    // as described in the Udacity FEND Style Guide:
-    // https://udacity.github.io/frontend-nanodegree-styleguide/javascript.html#for-in-loop
-    work.jobs.forEach(function(job){
-      locations.push(job.location);
-    });
-
-    return locations;
-  }
-
-  /*
-  createMapMarker(placeData) reads Google Places search results to create map pins.
-  placeData is the object returned from search results containing information
-  about a single location.
-  */
-  function createMapMarker(placeData) {
-
-    // The next lines save location data from the search result object to local variables
-    var lat = placeData.geometry.location.lat();  // latitude from the place service
-    var lon = placeData.geometry.location.lng();  // longitude from the place service
-    var name = placeData.formatted_address;   // name of the place from the place service
-    var bounds = window.mapBounds;            // current boundaries of the map window
-
-    // marker is an object with additional data about the pin for a single location
-    var marker = new google.maps.Marker({
-      map: map,
-      position: placeData.geometry.location,
-      title: name
-    });
-
-    // infoWindows are the little helper windows that open when you click
-    // or hover over a pin on a map. They usually contain more information
-    // about a location.
-    var infoWindow = new google.maps.InfoWindow({
-      content: name
-    });
-
-    // hmmmm, I wonder what this is about...
-    google.maps.event.addListener(marker, 'click', function() {
-      // your code goes here!
-    });
-
-    // this is where the pin actually gets added to the map.
-    // bounds.extend() takes in a map location object
-    bounds.extend(new google.maps.LatLng(lat, lon));
-    // fit the map to the new marker
-    map.fitBounds(bounds);
-    // center the map
-    map.setCenter(bounds.getCenter());
-  }
-
-  /*
-  callback(results, status) makes sure the search returned results for a location.
-  If so, it creates a new map marker for that location.
-  */
-  function callback(results, status) {
-    if (status == google.maps.places.PlacesServiceStatus.OK) {
-      createMapMarker(results[0]);
-    }
-  }
-
-  /*
-  pinPoster(locations) takes in the array of locations created by locationFinder()
-  and fires off Google place searches for each location
-  */
-  function pinPoster(locations) {
-
-    // creates a Google place search service object. PlacesService does the work of
-    // actually searching for location data.
-    var service = new google.maps.places.PlacesService(map);
-
-    // Iterates through the array of locations, creates a search object for each location
-      locations.forEach(function(place){
-      // the search request object
-      var request = {
-        query: place
-      };
-
-      // Actually searches the Google Maps API for location data and runs the callback
-      // function with the search results after each search.
-      service.textSearch(request, callback);
-    });
-  }
-
-  // Sets the boundaries of the map based on pin locations
-  window.mapBounds = new google.maps.LatLngBounds();
-
-  // locations is an array of location strings returned from locationFinder()
-  locations = locationFinder();
-
-  // pinPoster(locations) creates pins on the map for each location in
-  // the locations array
-  pinPoster(locations);
-
+  map.setFitView();
 }
 
-/*
-Uncomment the code below when you're ready to implement a Google Map!
-*/
+//这个函数会读取，你在 resumeBuilder.js 所写下的全部有关地址的数据
+function locationFinder() {
 
-// Calls the initializeMap() function when the page loads
+  // 初始化一个空的数组，用来存储地点
+  var locations = [];
+
+  //将 bio 的 contacts 数据里的地址添加到 locations 数组里
+  locations.push(bio.contacts.location);
+
+
+  //迭代 education 的 schools 数据里的地址，并将地址添加到 locations 数组里
+  education.schools.forEach(function(school) {
+    locations.push(school.location);
+  });
+
+
+  // 迭代 work 的 jobs 数据里的地址，并将地址添加到 locations 数组里
+  work.jobs.forEach(function(job) {
+    locations.push(job.location);
+  });
+
+  return locations;
+}
+
+
+//根据地址的名字，将标记添加上地图上
+function searchLocation(name) {
+  AMap.service('AMap.PlaceSearch', function() { //回调函数
+    //实例化PlaceSearch
+    placeSearch = new AMap.PlaceSearch();
+
+    //使用placeSearch对象调用关键字搜索的功能
+    var placeSearch = new AMap.PlaceSearch({ //构造地点查询类
+      pageSize: 1,
+      pageIndex: 1,
+      city: "010" //城市，默认：全国
+    });
+
+    //关键字查询地点坐标
+    placeSearch.search(name, function(status, result) {
+      //使用 result 在地图上创建标记
+      var position = extraPositionFromJson(result);
+      placeMarker(position.lng, position.lat, map);
+    });
+  });
+}
+
+//解析 JSON 并返回地图的坐标
+function extraPositionFromJson(json) {
+  var poiList = json.poiList;
+  var pois = poiList.pois;
+  var location = pois[0].location;
+
+  return location;
+}
+
+
+//在相应的坐标中添加标记
+function placeMarker(lng, lat, map) {
+  marker = new AMap.Marker({
+    position: [lng, lat],
+    map: map
+  });
+}
+
+// 在加载页面时调用 initializeMap（）函数
 window.addEventListener('load', initializeMap);
 
-// Vanilla JS way to listen for resizing of the window
-// and adjust map bounds
+// 当页面的大小改变时，调整地图的缩放
 window.addEventListener('resize', function(e) {
-  //Make sure the map bounds get updated on page resize
-  map.fitBounds(mapBounds);
+  map.setFitView();
 });
